@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eval 01 — LLM Evaluation Landscape</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-card: #0d1117;
+            --bg-code: #161b22;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --accent: #76B900;
+            --accent-dim: #76B90044;
+            --accent-glow: #76B90033;
+            --border: #21262d;
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+            --font-body: 'Inter', sans-serif;
+            --max-width: 900px;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 17px;
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            position: relative;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .hero > * { position: relative; z-index: 1; }
+        .series-label {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--accent);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+        .hero h1 {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+        .hero h1 .accent { color: var(--accent); }
+        .hero .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 640px;
+            margin-bottom: 2rem;
+        }
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-bottom: 2.5rem;
+        }
+        .tag {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            background: var(--accent-dim);
+            white-space: nowrap;
+        }
+        .pipeline {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+            margin-bottom: 1rem;
+            max-width: var(--max-width);
+        }
+        .pipeline-step {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            padding: 0.3rem 0.7rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+        .pipeline-arrow { color: var(--accent); font-size: 0.9rem; font-weight: 700; }
+        .slide {
+            min-height: 100vh;
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 4rem 1.5rem;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .slide-number {
+            font-family: var(--font-display);
+            font-size: 5rem;
+            font-weight: 700;
+            color: var(--accent-dim);
+            position: absolute;
+            top: 2rem;
+            right: 1.5rem;
+            line-height: 1;
+            user-select: none;
+        }
+        .slide h2 {
+            font-family: var(--font-display);
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+            line-height: 1.25;
+        }
+        .slide h3 {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .slide p { margin-bottom: 1rem; color: var(--text-secondary); }
+        .slide p strong { color: var(--text-primary); }
+        .slide ul, .slide ol { margin-bottom: 1rem; padding-left: 1.5rem; color: var(--text-secondary); }
+        .slide li { margin-bottom: 0.4rem; }
+        .slide li strong { color: var(--text-primary); }
+        .slide code {
+            font-family: var(--font-mono);
+            font-size: 0.88em;
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            padding: 0.05rem 0.35rem;
+            border-radius: 3px;
+            color: #c9d1d9;
+        }
+        .code-block {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin: 1.25rem 0;
+            overflow: hidden;
+        }
+        .code-header {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--accent);
+            background: rgba(118, 185, 0, 0.08);
+            padding: 0.4rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .code-block pre { margin: 0; padding: 1rem; overflow-x: auto; }
+        .code-block code {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: #c9d1d9;
+            background: transparent;
+            border: none;
+            padding: 0;
+        }
+        .kw { color: #ff7b72; }
+        .fn { color: #d2a8ff; }
+        .str { color: #a5d6ff; }
+        .cm { color: #8b949e; font-style: italic; }
+        .num { color: #79c0ff; }
+        .type { color: #ffa657; }
+        .dir { color: #ff7b72; }
+        .mac { color: #ffa657; }
+        .table-wrap {
+            overflow-x: auto;
+            margin: 1.25rem 0;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th {
+            background: var(--bg-code);
+            color: var(--accent);
+            font-weight: 600;
+            text-align: left;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-family: var(--font-display);
+            white-space: nowrap;
+        }
+        td {
+            padding: 0.6rem 1rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:nth-child(even) td { background: rgba(13, 17, 23, 0.5); }
+        .diagram-flow {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+        .diagram-box {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            text-align: center;
+            white-space: nowrap;
+        }
+        .diagram-box.accent { border-color: var(--accent); color: var(--accent); background: rgba(118, 185, 0, 0.08); }
+        .diagram-box.dim { color: var(--text-secondary); border-color: var(--border); }
+        .diagram-arrow { color: var(--accent); font-size: 1.3rem; font-weight: 700; }
+        .diagram-vertical {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+        .diagram-vertical .diagram-arrow { font-size: 1.1rem; }
+        .hierarchy {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+        .hierarchy-level { display: flex; align-items: center; gap: 0.75rem; }
+        .hierarchy-label {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            min-width: 80px;
+            text-align: right;
+        }
+        .hierarchy-items { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+        .hierarchy-item {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+        .hierarchy-item.accent { border-color: var(--accent); color: var(--accent); background: rgba(118, 185, 0, 0.08); }
+        .diagram-grid {
+            display: grid;
+            gap: 0.75rem;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+        .diagram-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+        .diagram-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+        .diagram-panel {
+            padding: 1rem;
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+        }
+        .diagram-panel.accent-border { border-left: 3px solid var(--accent); }
+        .diagram-panel h4 {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+        .diagram-panel p, .diagram-panel ul { font-size: 0.85rem; }
+        .callout {
+            background: var(--bg-card);
+            border-left: 3px solid var(--accent);
+            border-radius: 0 8px 8px 0;
+            padding: 1rem 1.25rem;
+            margin: 1.25rem 0;
+        }
+        .callout p { margin-bottom: 0; }
+        .callout p + p { margin-top: 0.5rem; }
+        .callout .callout-label {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.3rem;
+        }
+        .contents-list { list-style: none; padding-left: 0; counter-reset: contents; }
+        .contents-list li {
+            counter-increment: contents;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .contents-list li:last-child { border-bottom: none; }
+        .contents-list li::before {
+            content: counter(contents, decimal-leading-zero);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--accent);
+            min-width: 2rem;
+        }
+        .contents-list a { color: var(--text-primary); text-decoration: none; transition: color 0.2s; }
+        .contents-list a:hover { color: var(--accent); }
+        .footer {
+            text-align: center;
+            padding: 3rem 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+            max-width: var(--max-width);
+            margin: 0 auto;
+        }
+        .footer a { color: var(--accent); text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+        .canvas-wrap {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1.25rem 0;
+            overflow-x: auto;
+        }
+        .canvas-wrap canvas, .canvas-wrap svg { display: block; margin: 0 auto; max-width: 100%; }
+        .badge {
+            display: inline-block;
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            padding: 0.1rem 0.45rem;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            vertical-align: middle;
+            margin-left: 0.3rem;
+        }
+        .badge.ok    { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+        .badge.warn  { border-color: #ffa657; color: #ffa657; background: rgba(255,166,87,0.08); }
+        .badge.bad   { border-color: #ff7b72; color: #ff7b72; background: rgba(255,123,114,0.08); }
+        @media (max-width: 640px) {
+            .slide { padding: 3rem 1rem; min-height: auto; }
+            .slide-number { font-size: 3rem; top: 1.5rem; right: 1rem; }
+            .slide h2 { font-size: 1.5rem; }
+            .diagram-grid.cols-2, .diagram-grid.cols-3 { grid-template-columns: 1fr; }
+            .pipeline { gap: 0.15rem; }
+            .pipeline-step { font-size: 0.6rem; padding: 0.2rem 0.4rem; }
+            .hero h1 { font-size: 1.8rem; }
+            table { font-size: 0.78rem; }
+        }
+    </style>
+</head>
+<body>
+<header class="hero">
+    <div class="series-label">LLM Evaluations Series &mdash; Presentation 01</div>
+    <h1>LLM Evaluation <span class="accent">Landscape</span></h1>
+    <p class="subtitle">Static benchmarks vs production evals, what to measure, the eval pyramid &mdash; and why choosing the wrong eval is worse than having none at all.</p>
+    <div class="tags">
+        <span class="tag">MMLU</span>
+        <span class="tag">HumanEval</span>
+        <span class="tag">SWE-bench</span>
+        <span class="tag">GPQA</span>
+        <span class="tag">MT-Bench</span>
+        <span class="tag">Eval Pyramid</span>
+        <span class="tag">Reference-Free</span>
+    </div>
+    <div class="pipeline">
+        <span class="pipeline-step">Define Goal</span>
+        <span class="pipeline-arrow">&rarr;</span>
+        <span class="pipeline-step">Pick Benchmark</span>
+        <span class="pipeline-arrow">&rarr;</span>
+        <span class="pipeline-step">Spot Gaps</span>
+        <span class="pipeline-arrow">&rarr;</span>
+        <span class="pipeline-step">Classify Eval Type</span>
+        <span class="pipeline-arrow">&rarr;</span>
+        <span class="pipeline-step">Layer Pyramid</span>
+        <span class="pipeline-arrow">&rarr;</span>
+        <span class="pipeline-step">Ship</span>
+    </div>
+</header>
+
+<section class="slide" id="slide-00">
+    <div class="slide-number">00</div>
+    <h2>Topics We'll Cover</h2>
+    <ul class="contents-list">
+        <li><a href="#slide-01">Why Eval Is Hard for LLMs</a></li>
+        <li><a href="#slide-02">Static Benchmarks &mdash; MMLU, MMLU-Pro, GPQA, HumanEval, SWE-bench, MT-Bench</a></li>
+        <li><a href="#slide-03">What Benchmarks Miss &mdash; Drift, Multi-Turn, Tool Use, Agentic</a></li>
+        <li><a href="#slide-04">Capability vs Capability-In-Context</a></li>
+        <li><a href="#slide-05">Three Classes &mdash; Reference-Based, Reference-Free, Human-Graded</a></li>
+        <li><a href="#slide-06">The Eval Pyramid &mdash; Unit, Regression, A/B, Online</a></li>
+        <li><a href="#slide-07">Cost Structure &mdash; Tokens, Human Time, Judge Models</a></li>
+        <li><a href="#slide-08">Building Your First Eval Set</a></li>
+        <li><a href="#slide-09">What to Take Away</a></li>
+    </ul>
+</section>
+
+<section class="slide" id="slide-01">
+    <div class="slide-number">01</div>
+    <h2>Why Eval Is Hard for LLMs</h2>
+    <p>Traditional software testing is a closed function: given input <em>x</em>, does the system return the unique correct answer <em>y</em>? For LLMs the answer space is open-ended, context-dependent, and distribution-shifted between training and deployment. There is often no ground truth &mdash; only <em>better</em> and <em>worse</em>.</p>
+
+    <div class="diagram-grid cols-2">
+        <div class="diagram-panel accent-border">
+            <h4>Determinism problem</h4>
+            <p>At temperature &gt; 0, the same prompt produces different outputs on each call. Even temperature&nbsp;0 is not strictly reproducible across hardware, batch size, or quantisation level. Your eval harness must run multiple samples and report distributions, not single values.</p>
+        </div>
+        <div class="diagram-panel accent-border">
+            <h4>Goodhart's Law</h4>
+            <p>Once a benchmark becomes a target, it ceases to be a good measure. GPT-4 and Claude 3 Opus both score &gt;86&nbsp;% on original MMLU; the benchmark no longer separates frontier models. Every number you publish will eventually be gamed &mdash; intentionally or by data contamination.</p>
+        </div>
+    </div>
+
+    <div class="diagram-grid cols-2">
+        <div class="diagram-panel accent-border">
+            <h4>Proxy misalignment</h4>
+            <p>High benchmark score &ne; high user satisfaction. A model can memorise MMLU answers during pre-training (contamination) yet fail routine helpdesk summarisation. The proxy task must match the production task or the eval is noise.</p>
+        </div>
+        <div class="diagram-panel accent-border">
+            <h4>Capability vs alignment</h4>
+            <p>Evaluating <em>can it do X</em> is different from evaluating <em>does it do X safely, consistently, and within policy</em>. Conflating the two produces models that ace reasoning benchmarks but hallucinate citations in production.</p>
+        </div>
+    </div>
+
+    <div class="callout">
+        <div class="callout-label">Core principle</div>
+        <p>An eval is a bet that a metric predicts business value. State that bet explicitly and revisit it after every model version. If you cannot articulate what a 3-point MMLU improvement buys your users, you are measuring the wrong thing.</p>
+    </div>
+</section>
+
+<section class="slide" id="slide-02">
+    <div class="slide-number">02</div>
+    <h2>Static Benchmarks &mdash; MMLU, MMLU-Pro, GPQA, HumanEval, SWE-bench, MT-Bench</h2>
+    <p>Six benchmarks dominate leaderboards. Know their structure, scoring methodology, and known failure modes before trusting any headline number.</p>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Benchmark</th>
+                    <th>Tasks / Size</th>
+                    <th>Metric</th>
+                    <th>Known Issues</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>MMLU</strong> <span class="badge">Hendrycks 2020</span></td>
+                    <td>57 subjects, 14&thinsp;042 MCQs</td>
+                    <td>Accuracy (4-choice)</td>
+                    <td>Saturated at frontier; heavy contamination risk; 4-choice inflates random baseline to 25&nbsp;%</td>
+                </tr>
+                <tr>
+                    <td><strong>MMLU-Pro</strong> <span class="badge">Wang 2024</span></td>
+                    <td>12&thinsp;032 harder MCQs, 10-choice</td>
+                    <td>Accuracy (10-choice)</td>
+                    <td>Random baseline 10&nbsp;%; still MCQ, so format gaming possible</td>
+                </tr>
+                <tr>
+                    <td><strong>GPQA</strong> <span class="badge">Rein 2023</span></td>
+                    <td>448 PhD-level science Qs</td>
+                    <td>Accuracy (4-choice)</td>
+                    <td>Small N; domain experts score ~65&nbsp;%; suited for hard capability ceiling tests only</td>
+                </tr>
+                <tr>
+                    <td><strong>HumanEval</strong> <span class="badge">Chen 2021</span></td>
+                    <td>164 Python functions, unit tests</td>
+                    <td>pass@k (k=1,10,100)</td>
+                    <td>Tiny; test suite quality varies; no multi-file, no imports</td>
+                </tr>
+                <tr>
+                    <td><strong>SWE-bench</strong> <span class="badge">Jimenez 2023</span></td>
+                    <td>2&thinsp;294 GitHub issues + test suites</td>
+                    <td>% resolved</td>
+                    <td>Expensive (~$2&ndash;5 per run per agent); repo contamination; scaffold-sensitive</td>
+                </tr>
+                <tr>
+                    <td><strong>MT-Bench</strong> <span class="badge">Zheng 2023</span></td>
+                    <td>80 two-turn conversations, 8 categories</td>
+                    <td>GPT-4 score 1&ndash;10</td>
+                    <td>Judge bias (positional, verbosity); 80 items is low N for statistical confidence</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="callout">
+        <div class="callout-label">pass@k formula</div>
+        <p>HumanEval's <code>pass@k</code> is the probability that at least one of <em>k</em> sampled completions passes all unit tests, estimated without running all <em>k</em>: <strong>pass@k = 1 &minus; C(n&minus;c, k) / C(n, k)</strong> where <em>n</em> is total samples and <em>c</em> is passing samples. This unbiased estimator avoids exponential sample cost for large k.</p>
+    </div>
+</section>
+
+<section class="slide" id="slide-03">
+    <div class="slide-number">03</div>
+    <h2>What Benchmarks Miss &mdash; Drift, Multi-Turn, Tool Use, Agentic</h2>
+    <p>Static benchmarks are snapshots taken in the lab. Production LLM systems exhibit failure modes that flat MCQ or single-turn code-gen tests simply cannot expose.</p>
+
+    <div class="diagram-grid cols-2">
+        <div class="diagram-panel accent-border">
+            <h4>Distribution drift</h4>
+            <p>User queries shift over time: new product launches, changing jargon, seasonal topics, emerging adversarial patterns. A model fine-tuned in Q1 on RLHF data may degrade silently by Q3 without any model change. Static benchmarks don't capture this; online eval does.</p>
+        </div>
+        <div class="diagram-panel accent-border">
+            <h4>Multi-turn coherence</h4>
+            <p>MT-Bench has only 2 turns. Real support conversations run 8&ndash;15 turns. Models lose track of earlier context, contradict themselves, or hallucinate earlier user statements. No standard benchmark measures reference-to-prior-turn accuracy at depth&nbsp;&gt;&nbsp;4.</p>
+        </div>
+    </div>
+
+    <div class="diagram-grid cols-2">
+        <div class="diagram-panel accent-border">
+            <h4>Tool-use reliability</h4>
+            <p>Generating a syntactically valid JSON tool-call is not the same as calling the right tool with correct argument types, honouring schema constraints, handling errors, and retrying sensibly. ToolTalk and ToolBench exist but neither is a universal standard. Teams must roll bespoke tool-call evals against their own API surfaces.</p>
+        </div>
+        <div class="diagram-panel accent-border">
+            <h4>Agentic task completion</h4>
+            <p>WebArena <span class="badge">Zhou 2023</span> and OSWorld <span class="badge">Xie 2024</span> benchmark web-agent completion rates on real browser tasks. SWE-bench Verified <span class="badge">2024</span> adds human-validated test cases. These are expensive (&gt;$10/task) and scaffold-sensitive; small architectural changes can swing scores by &plusmn;15&nbsp;%.</p>
+        </div>
+    </div>
+
+    <div class="callout">
+        <div class="callout-label">The dark matter of production failures</div>
+        <p>Studies of deployed chatbot logs consistently find that the top failure categories are: <strong>refusal over-trigger</strong> (safe topics refused), <strong>hallucinated citations</strong> (plausible but wrong URLs/authors), <strong>instruction ignore</strong> (model ignores explicit constraints in system prompt), and <strong>format drift</strong> (correct content, wrong structure). None of these appear prominently in MMLU or HumanEval scores.</p>
+    </div>
+</section>
+
+<section class="slide" id="slide-04">
+    <div class="slide-number">04</div>
+    <h2>Capability vs Capability-In-Context</h2>
+    <p>A model may <em>possess</em> a capability under ideal prompting conditions yet <em>fail to deploy</em> it reliably under production system-prompt + context-window + tool-call overhead. This distinction matters enormously for eval design.</p>
+
+    <div class="canvas-wrap">
+        <svg viewBox="0 0 720 260" width="720" height="260" xmlns="http://www.w3.org/2000/svg">
+            <style>
+                .bx  { fill: #161b22; stroke: #30363d; stroke-width: 1; }
+                .bxg { fill: rgba(118,185,0,0.08); stroke: #76B900; stroke-width: 1.5; }
+                .tx  { fill: #e6edf3; font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600; }
+                .sm  { fill: #8b949e; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+                .aw  { stroke: #76B900; stroke-width: 1.5; fill: none; marker-end: url(#arr1); }
+                .aw2 { stroke: #ff7b72; stroke-width: 1.5; fill: none; stroke-dasharray: 5 3; marker-end: url(#arr2); }
+            </style>
+            <defs>
+                <marker id="arr1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#76B900"/>
+                </marker>
+                <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#ff7b72"/>
+                </marker>
+            </defs>
+
+            <rect x="10"  y="30"  width="200" height="60" rx="6" class="bxg"/>
+            <text x="20"  y="55"  class="tx">Model Capability</text>
+            <text x="20"  y="80"  class="sm">Elicited by careful prompting</text>
+
+            <path d="M 210 60 L 310 60" class="aw"/>
+            <text x="220" y="52"  class="sm">ideal prompt</text>
+
+            <rect x="310" y="30"  width="200" height="60" rx="6" class="bxg"/>
+            <text x="320" y="55"  class="tx">Lab Benchmark Score</text>
+            <text x="320" y="80"  class="sm">Single-turn, clean context</text>
+
+            <path d="M 510 60 L 610 60" class="aw"/>
+            <text x="515" y="52"  class="sm">deploy</text>
+
+            <rect x="610" y="30"  width="100" height="60" rx="6" class="bx"/>
+            <text x="615" y="60"  class="sm" style="fill:#76B900">production</text>
+
+            <path d="M 210 90 L 310 150" class="aw2"/>
+            <text x="215" y="130" class="sm" style="fill:#ff7b72">production</text>
+            <text x="215" y="143" class="sm" style="fill:#ff7b72">system prompt</text>
+
+            <rect x="310" y="130" width="200" height="60" rx="6" class="bx"/>
+            <text x="320" y="155" class="tx">Capability-In-Context</text>
+            <text x="320" y="175" class="sm">Real system prompt + tools + history</text>
+
+            <path d="M 510 160 L 610 90" class="aw2"/>
+
+            <text x="20"  y="230" class="sm">Gap = capability lost to system prompt noise, long contexts, tool overhead, instruction conflicts</text>
+        </svg>
+    </div>
+
+    <p>Concrete examples of the gap: a model that solves GPQA diamond-tier chemistry under zero-shot chain-of-thought may fail to answer a simpler chemistry question when the system prompt is 4&thinsp;000 tokens of customer-service instructions. The instructions crowd out reasoning capacity without the model flagging any uncertainty.</p>
+
+    <div class="callout">
+        <div class="callout-label">Eval design implication</div>
+        <p>Always evaluate <em>in your deployment context</em>. Run your eval suite with the full production system prompt, any injected tool schemas, and representative conversation histories. A benchmark run against a bare-model endpoint tells you about capability; it tells you almost nothing about capability-in-context. The gap can easily be 15&ndash;25&nbsp;% on complex tasks.</p>
+    </div>
+</section>
+
+<section class="slide" id="slide-05">
+    <div class="slide-number">05</div>
+    <h2>Three Classes &mdash; Reference-Based, Reference-Free, Human-Graded</h2>
+    <p>Every eval method falls into one of three classes. Your choice determines cost, scalability, and what failure modes you can catch.</p>
+
+    <div class="hierarchy">
+        <div class="hierarchy-level">
+            <div class="hierarchy-label">cheapest</div>
+            <div class="hierarchy-items">
+                <span class="hierarchy-item accent">Reference-Based</span>
+                <span class="hierarchy-item">Exact match</span>
+                <span class="hierarchy-item">F1 / ROUGE / BLEU</span>
+                <span class="hierarchy-item">Unit test (pass@k)</span>
+                <span class="hierarchy-item">JSON schema check</span>
+            </div>
+        </div>
+        <div class="hierarchy-level">
+            <div class="hierarchy-label">mid-cost</div>
+            <div class="hierarchy-items">
+                <span class="hierarchy-item accent">Reference-Free</span>
+                <span class="hierarchy-item">LLM-as-judge (rubric)</span>
+                <span class="hierarchy-item">Embedding similarity</span>
+                <span class="hierarchy-item">Classifier (toxicity etc.)</span>
+                <span class="hierarchy-item">Self-consistency</span>
+            </div>
+        </div>
+        <div class="hierarchy-level">
+            <div class="hierarchy-label">expensive</div>
+            <div class="hierarchy-items">
+                <span class="hierarchy-item accent">Human-Graded</span>
+                <span class="hierarchy-item">Expert annotation</span>
+                <span class="hierarchy-item">Crowdsourced rating</span>
+                <span class="hierarchy-item">A/B user preference</span>
+                <span class="hierarchy-item">Red-team review</span>
+            </div>
+        </div>
+    </div>
+
+    <h3>When to use each class</h3>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Class</th><th>Good for</th><th>Breaks down when</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><strong>Reference-based</strong></td>
+                    <td>Code correctness, structured output, factual QA with known answers, regression CI</td>
+                    <td>Free-text generation, paraphrase-valid answers, creative tasks &mdash; ROUGE penalises correct but differently-worded outputs</td>
+                </tr>
+                <tr>
+                    <td><strong>Reference-free</strong></td>
+                    <td>Summarisation quality, instruction-following, style consistency, scalable production eval</td>
+                    <td>Judge biases (verbosity, self-preference) corrupt scores; requires calibration against human ground truth</td>
+                </tr>
+                <tr>
+                    <td><strong>Human-graded</strong></td>
+                    <td>Ground-truth anchor for judge calibration, nuanced policy evaluation, final sign-off before deploy</td>
+                    <td>Too slow and expensive for regression CI; annotator disagreement inflates variance; hard to reproduce</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="slide" id="slide-06">
+    <div class="slide-number">06</div>
+    <h2>The Eval Pyramid &mdash; Unit, Regression, A/B, Online</h2>
+    <p>The eval pyramid borrows from software testing: fast, cheap, local checks at the bottom; slow, expensive, production signals at the top. Run all four layers but weight your investment heavily at the bottom &mdash; each layer should gate the next.</p>
+
+    <div class="diagram-vertical">
+        <div class="diagram-box accent" style="width:300px; text-align:center;">Online A/B &amp; shadow scoring<br><small style="color:#8b949e">% of production traffic &middot; days&ndash;weeks &middot; $$$</small></div>
+        <div class="diagram-arrow">&darr;</div>
+        <div class="diagram-box" style="width:380px; text-align:center;">Sampled Human Review<br><small style="color:#8b949e">100&ndash;500 items/week &middot; annotator pool &middot; $$</small></div>
+        <div class="diagram-arrow">&darr;</div>
+        <div class="diagram-box" style="width:460px; text-align:center;">Regression CI &mdash; Judge + Reference evals on golden set<br><small style="color:#8b949e">500&ndash;2000 items &middot; per-commit &middot; ~$10&ndash;50/run</small></div>
+        <div class="diagram-arrow">&darr;</div>
+        <div class="diagram-box" style="width:540px; text-align:center;">Unit Evals &mdash; Deterministic assertions, schema checks, toxicity<br><small style="color:#8b949e">&lt;5 min &middot; CI on every PR &middot; pennies</small></div>
+    </div>
+
+    <h3>Layer responsibilities</h3>
+    <ul>
+        <li><strong>Unit layer</strong> &mdash; format correctness, JSON schema, refusal on explicit policy violations, toxicity classifier, length constraints. Zero LLM judge calls. Runs in under 5 minutes.</li>
+        <li><strong>Regression layer</strong> &mdash; golden-set eval with LLM judge or reference matching. Catches model-version regressions. Gate: fail if any category drops &gt;2&nbsp;% absolute.</li>
+        <li><strong>Sampled human review</strong> &mdash; 100&ndash;200 stratified production samples reviewed by trained annotators weekly. Ground-truth anchor for judge drift. Populates the golden set.</li>
+        <li><strong>Online A/B</strong> &mdash; shadow production traffic through the candidate model; compare engagement, escalation, and CSAT signals. Requires feature-flag infrastructure.</li>
+    </ul>
+</section>
+
+<section class="slide" id="slide-07">
+    <div class="slide-number">07</div>
+    <h2>Cost Structure &mdash; Tokens, Human Time, Judge Models</h2>
+    <p>Eval cost is almost never free. Budget it explicitly or watch it silently inflate your inference bill.</p>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Unit cost (2025 indicative)</th>
+                    <th>Scale driver</th>
+                    <th>Optimisation lever</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>SUT inference (output tokens)</td>
+                    <td>$0.003&ndash;$0.015 / 1K tokens (Sonnet&ndash;Opus)</td>
+                    <td>N items &times; avg response length</td>
+                    <td>Cache eval inputs; batch API (&minus;50&nbsp;% Anthropic batch)</td>
+                </tr>
+                <tr>
+                    <td>LLM judge (scoring call)</td>
+                    <td>$0.003&ndash;$0.015 / 1K tokens + prompt overhead</td>
+                    <td>N items &times; judge prompt + response</td>
+                    <td>Smaller judge model; multi-shot prompt compression; sample eval 10&nbsp;%</td>
+                </tr>
+                <tr>
+                    <td>Human annotation</td>
+                    <td>$0.05&ndash;$0.50 / item (crowdsource&ndash;expert)</td>
+                    <td>Items needing human review</td>
+                    <td>Active learning: only annotate uncertain samples; dual-annotate 10&nbsp;%</td>
+                </tr>
+                <tr>
+                    <td>SWE-bench / agent eval</td>
+                    <td>$2&ndash;$10 / task (compute + tokens)</td>
+                    <td>N agent tasks &times; avg turns</td>
+                    <td>Checkpoint-based resumption; parallelize sandboxes</td>
+                </tr>
+                <tr>
+                    <td>Human A/B experiment</td>
+                    <td>$5&ndash;$20K / experiment (MTurk or vendor)</td>
+                    <td>Statistical power needed</td>
+                    <td>Use online implicit signals first; human A/B only for ambiguous cases</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="callout">
+        <div class="callout-label">Practical budget heuristic</div>
+        <p>For a mid-size team running 50 deploys/month: target <strong>&lt;$500/month</strong> total eval spend. That means: ~1&thinsp;500-item golden set, Sonnet-class judge, batch API, no SWE-bench on every PR. Reserve the expensive evals (agent tasks, human A/B) for monthly capability audits and major version gates.</p>
+    </div>
+</section>
+
+<section class="slide" id="slide-08">
+    <div class="slide-number">08</div>
+    <h2>Building Your First Eval Set</h2>
+    <p>A well-constructed 200-item eval set beats a 10&thinsp;000-item dump of noisy data. These are the engineering steps that matter.</p>
+
+    <div class="code-block">
+        <div class="code-header">eval_set_recipe.py &mdash; skeleton structure</div>
+<pre><code><span class="kw">from</span> <span class="type">dataclasses</span> <span class="kw">import</span> <span class="fn">dataclass</span>
+<span class="kw">from</span> <span class="type">enum</span>      <span class="kw">import</span> <span class="type">StrEnum</span>
+<span class="kw">import</span> <span class="type">json</span>, <span class="type">hashlib</span>
+
+<span class="kw">class</span> <span class="type">Split</span>(<span class="type">StrEnum</span>):
+    TRAIN = <span class="str">"train"</span>   <span class="cm"># prompt-development / few-shot selection</span>
+    DEV   = <span class="str">"dev"</span>     <span class="cm"># tuning judge thresholds</span>
+    TEST  = <span class="str">"test"</span>    <span class="cm"># held-out; never touched during development</span>
+
+<span class="fn">@dataclass</span>
+<span class="kw">class</span> <span class="type">EvalItem</span>:
+    id:          <span class="type">str</span>        <span class="cm"># stable hash of (category, prompt)</span>
+    category:    <span class="type">str</span>        <span class="cm"># e.g. "summarisation", "tool_call", "refusal"</span>
+    split:       <span class="type">Split</span>
+    prompt:      <span class="type">str</span>        <span class="cm"># full prompt as sent to SUT</span>
+    reference:   <span class="type">str | None</span> <span class="cm"># gold answer if available</span>
+    rubric:      <span class="type">str | None</span> <span class="cm"># judge prompt snippet for this item</span>
+    tags:        <span class="type">list</span>[<span class="type">str</span>]  <span class="cm"># e.g. ["long-context", "tool-use", "en"]</span>
+    added_by:    <span class="type">str</span>        <span class="cm"># "human_seed" | "prod_sample_2025-Q1" | "adversarial"</span>
+
+<span class="kw">def</span> <span class="fn">make_id</span>(category: <span class="type">str</span>, prompt: <span class="type">str</span>) -&gt; <span class="type">str</span>:
+    <span class="kw">return</span> hashlib.<span class="fn">sha1</span>(f<span class="str">"{category}|{prompt}"</span>.<span class="fn">encode</span>()).<span class="fn">hexdigest</span>()[:<span class="num">12</span>]</code></pre>
+    </div>
+
+    <h3>Sourcing strategy</h3>
+    <ul>
+        <li><strong>Seed (30&nbsp;%)</strong> &mdash; hand-crafted by domain experts. Cover known-hard cases: boundary refusals, ambiguous instructions, multi-step tool chains.</li>
+        <li><strong>Production sample (50&nbsp;%)</strong> &mdash; stratified random sample of real traffic, annotated offline. Ensures the eval tracks actual user intent distribution.</li>
+        <li><strong>Adversarial (20&nbsp;%)</strong> &mdash; red-team generated, focusing on policy edges, prompt injection, and known model weaknesses. Reviewed by safety team before inclusion.</li>
+    </ul>
+
+    <div class="callout">
+        <div class="callout-label">Golden-set hygiene rules</div>
+        <p>Never let the golden set leak into fine-tuning data. Version-stamp every release (<code>eval-set-v3.2.jsonl</code>). Never delete items &mdash; mark as <code>deprecated</code> with a reason. Re-annotate a random 5&nbsp;% sample each quarter to catch annotation drift. Report inter-annotator agreement (Cohen's kappa &ge; 0.7 is the minimum bar for a trusted set).</p>
+    </div>
+</section>
+
+<section class="slide" id="slide-09">
+    <div class="slide-number">09</div>
+    <h2>What to Take Away</h2>
+    <ul>
+        <li><strong>Evals are proxies.</strong> State the business value each metric predicts. If you can't, pick a different metric.</li>
+        <li><strong>Static benchmarks are saturated and contaminated.</strong> MMLU and HumanEval are useful orientation points, not production quality signals. Use GPQA and SWE-bench Verified for harder capability ceilings.</li>
+        <li><strong>Benchmarks miss the dark matter.</strong> Drift, multi-turn coherence, tool-use reliability, and agentic task completion all require purpose-built evals.</li>
+        <li><strong>Capability &ne; capability-in-context.</strong> Always evaluate inside your actual deployment context: full system prompt, tool schemas, realistic context length.</li>
+        <li><strong>Layer the pyramid.</strong> Unit evals on every PR, regression CI on every deploy, sampled human review weekly, online A/B for major changes. Each layer gates the next.</li>
+        <li><strong>Budget explicitly.</strong> Target &lt;$500/month for a mid-size team; use batch API, Sonnet-class judges, and active-learning annotation to stay under budget.</li>
+        <li><strong>Golden-set hygiene is non-negotiable.</strong> Never let eval data leak into training. Version, annotate, and audit quarterly.</li>
+    </ul>
+
+    <div class="callout">
+        <div class="callout-label">Where to next</div>
+        <p>Deck 02 goes deep on LLM-as-Judge: pairwise vs scoring, positional and verbosity biases, calibration against human ground truth, and constitutional eval with multi-criteria rubrics.</p>
+    </div>
+</section>
+
+<footer class="footer">
+    <p>Part of the <a href="https://github.com/BrendanJamesLynskey/LLM_Hub_Evaluations">LLM Evaluations sub-hub</a></p>
+    <p style="margin-top: 0.5rem; font-size: 0.8rem;"><a href="https://github.com/BrendanJamesLynskey/LLM_Hub_Evaluations">Back to Series Index</a></p>
+</footer>
+<script>
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.slide').forEach(slide => {
+        slide.style.opacity = '0';
+        slide.style.transform = 'translateY(30px)';
+        slide.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(slide);
+    });
+</script>
+</body>
+</html>
