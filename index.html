@@ -9,15 +9,15 @@
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #0a0a0a;
-            --bg-card: #0d1117;
-            --bg-code: #161b22;
-            --text-primary: #e6edf3;
-            --text-secondary: #8b949e;
-            --accent: #76B900;
-            --accent-dim: #76B90044;
-            --accent-glow: #76B90033;
-            --border: #21262d;
+            --bg-primary: #0f2027;
+            --bg-card: #13272f;
+            --bg-code: #182f38;
+            --text-primary: #ede7dd;
+            --text-secondary: #8ca5a9;
+            --accent: #83c395;
+            --accent-dim: #83c39544;
+            --accent-glow: #83c39533;
+            --border: #23404a;
             --font-display: 'Space Grotesk', sans-serif;
             --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
             --font-body: 'Inter', sans-serif;
@@ -165,7 +165,7 @@
             border: 1px solid var(--border);
             padding: 0.05rem 0.35rem;
             border-radius: 3px;
-            color: #c9d1d9;
+            color: #cfd7d1;
         }
         .code-block {
             background: var(--bg-code);
@@ -178,7 +178,7 @@
             font-family: var(--font-mono);
             font-size: 0.75rem;
             color: var(--accent);
-            background: rgba(118, 185, 0, 0.08);
+            background: rgba(131,195,149,0.08);
             padding: 0.4rem 1rem;
             border-bottom: 1px solid var(--border);
         }
@@ -187,19 +187,19 @@
             font-family: var(--font-mono);
             font-size: 0.85rem;
             line-height: 1.6;
-            color: #c9d1d9;
+            color: #cfd7d1;
             background: transparent;
             border: none;
             padding: 0;
         }
-        .kw { color: #ff7b72; }
-        .fn { color: #d2a8ff; }
-        .str { color: #a5d6ff; }
-        .cm { color: #8b949e; font-style: italic; }
-        .num { color: #79c0ff; }
-        .type { color: #ffa657; }
-        .dir { color: #ff7b72; }
-        .mac { color: #ffa657; }
+        .kw { color: #f48f70; }
+        .fn { color: #d4c0ea; }
+        .str { color: #c3dbea; }
+        .cm { color: #8ca5a9; font-style: italic; }
+        .num { color: #a8cee8; }
+        .type { color: #eac48b; }
+        .dir { color: #f48f70; }
+        .mac { color: #eac48b; }
         .table-wrap {
             overflow-x: auto;
             margin: 1.25rem 0;
@@ -223,7 +223,7 @@
             color: var(--text-secondary);
         }
         tr:last-child td { border-bottom: none; }
-        tr:nth-child(even) td { background: rgba(13, 17, 23, 0.5); }
+        tr:nth-child(even) td { background: rgba(19,39,47,0.5); }
         .diagram-flow {
             display: flex;
             flex-wrap: wrap;
@@ -247,7 +247,7 @@
             text-align: center;
             white-space: nowrap;
         }
-        .diagram-box.accent { border-color: var(--accent); color: var(--accent); background: rgba(118, 185, 0, 0.08); }
+        .diagram-box.accent { border-color: var(--accent); color: var(--accent); background: rgba(131,195,149,0.08); }
         .diagram-box.dim { color: var(--text-secondary); border-color: var(--border); }
         .diagram-arrow { color: var(--accent); font-size: 1.3rem; font-weight: 700; }
         .diagram-vertical {
@@ -290,7 +290,7 @@
             border: 1px solid var(--border);
             color: var(--text-secondary);
         }
-        .hierarchy-item.accent { border-color: var(--accent); color: var(--accent); background: rgba(118, 185, 0, 0.08); }
+        .hierarchy-item.accent { border-color: var(--accent); color: var(--accent); background: rgba(131,195,149,0.08); }
         .diagram-grid {
             display: grid;
             gap: 0.75rem;
@@ -384,8 +384,8 @@
             margin-left: 0.3rem;
         }
         .badge.ok    { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
-        .badge.warn  { border-color: #ffa657; color: #ffa657; background: rgba(255,166,87,0.08); }
-        .badge.bad   { border-color: #ff7b72; color: #ff7b72; background: rgba(255,123,114,0.08); }
+        .badge.warn  { border-color: #eac48b; color: #eac48b; background: rgba(234,196,139,0.08); }
+        .badge.bad   { border-color: #f48f70; color: #f48f70; background: rgba(244,143,112,0.08); }
         @media (max-width: 640px) {
             .slide { padding: 3rem 1rem; min-height: auto; }
             .slide-number { font-size: 3rem; top: 1.5rem; right: 1rem; }
@@ -579,19 +579,19 @@
     <div class="canvas-wrap">
         <svg viewBox="0 0 720 260" width="720" height="260" xmlns="http://www.w3.org/2000/svg">
             <style>
-                .bx  { fill: #161b22; stroke: #30363d; stroke-width: 1; }
-                .bxg { fill: rgba(118,185,0,0.08); stroke: #76B900; stroke-width: 1.5; }
-                .tx  { fill: #e6edf3; font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600; }
-                .sm  { fill: #8b949e; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
-                .aw  { stroke: #76B900; stroke-width: 1.5; fill: none; marker-end: url(#arr1); }
-                .aw2 { stroke: #ff7b72; stroke-width: 1.5; fill: none; stroke-dasharray: 5 3; marker-end: url(#arr2); }
+                .bx  { fill: #182f38; stroke: #2f4d57; stroke-width: 1; }
+                .bxg { fill: rgba(131,195,149,0.08); stroke: #83c395; stroke-width: 1.5; }
+                .tx  { fill: #ede7dd; font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600; }
+                .sm  { fill: #8ca5a9; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+                .aw  { stroke: #83c395; stroke-width: 1.5; fill: none; marker-end: url(#arr1); }
+                .aw2 { stroke: #f48f70; stroke-width: 1.5; fill: none; stroke-dasharray: 5 3; marker-end: url(#arr2); }
             </style>
             <defs>
                 <marker id="arr1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#76B900"/>
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#83c395"/>
                 </marker>
                 <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#ff7b72"/>
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#f48f70"/>
                 </marker>
             </defs>
 
@@ -610,11 +610,11 @@
             <text x="515" y="52"  class="sm">deploy</text>
 
             <rect x="610" y="30"  width="100" height="60" rx="6" class="bx"/>
-            <text x="615" y="60"  class="sm" style="fill:#76B900">production</text>
+            <text x="615" y="60"  class="sm" style="fill:#83c395">production</text>
 
             <path d="M 210 90 L 310 150" class="aw2"/>
-            <text x="215" y="130" class="sm" style="fill:#ff7b72">production</text>
-            <text x="215" y="143" class="sm" style="fill:#ff7b72">system prompt</text>
+            <text x="215" y="130" class="sm" style="fill:#f48f70">production</text>
+            <text x="215" y="143" class="sm" style="fill:#f48f70">system prompt</text>
 
             <rect x="310" y="130" width="200" height="60" rx="6" class="bx"/>
             <text x="320" y="155" class="tx">Capability-In-Context</text>
@@ -703,13 +703,13 @@
     <p>The eval pyramid borrows from software testing: fast, cheap, local checks at the bottom; slow, expensive, production signals at the top. Run all four layers but weight your investment heavily at the bottom &mdash; each layer should gate the next.</p>
 
     <div class="diagram-vertical">
-        <div class="diagram-box accent" style="width:300px; text-align:center;">Online A/B &amp; shadow scoring<br><small style="color:#8b949e">% of production traffic &middot; days&ndash;weeks &middot; $$$</small></div>
+        <div class="diagram-box accent" style="width:300px; text-align:center;">Online A/B &amp; shadow scoring<br><small style="color:#8ca5a9">% of production traffic &middot; days&ndash;weeks &middot; $$$</small></div>
         <div class="diagram-arrow">&darr;</div>
-        <div class="diagram-box" style="width:380px; text-align:center;">Sampled Human Review<br><small style="color:#8b949e">100&ndash;500 items/week &middot; annotator pool &middot; $$</small></div>
+        <div class="diagram-box" style="width:380px; text-align:center;">Sampled Human Review<br><small style="color:#8ca5a9">100&ndash;500 items/week &middot; annotator pool &middot; $$</small></div>
         <div class="diagram-arrow">&darr;</div>
-        <div class="diagram-box" style="width:460px; text-align:center;">Regression CI &mdash; Judge + Reference evals on golden set<br><small style="color:#8b949e">500&ndash;2000 items &middot; per-commit &middot; ~$10&ndash;50/run</small></div>
+        <div class="diagram-box" style="width:460px; text-align:center;">Regression CI &mdash; Judge + Reference evals on golden set<br><small style="color:#8ca5a9">500&ndash;2000 items &middot; per-commit &middot; ~$10&ndash;50/run</small></div>
         <div class="diagram-arrow">&darr;</div>
-        <div class="diagram-box" style="width:540px; text-align:center;">Unit Evals &mdash; Deterministic assertions, schema checks, toxicity<br><small style="color:#8b949e">&lt;5 min &middot; CI on every PR &middot; pennies</small></div>
+        <div class="diagram-box" style="width:540px; text-align:center;">Unit Evals &mdash; Deterministic assertions, schema checks, toxicity<br><small style="color:#8ca5a9">&lt;5 min &middot; CI on every PR &middot; pennies</small></div>
     </div>
 
     <h3>Layer responsibilities</h3>
